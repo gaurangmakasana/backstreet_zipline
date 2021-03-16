@@ -1,0 +1,52 @@
+FROM python:3.6-slim-buster
+
+# set the virtual env 
+ENV VIRTUAL_ENV=/tmp/venv
+RUN python -m venv /tmp/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# install conda
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+RUN apt-get update
+
+RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
+RUN wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh 
+
+RUN conda install python=3.6
+
+# install zipline
+RUN conda install -c Quantopian zipline
+
+# install other modules
+ADD requirements_zipline.txt /tmp/venv/requirements.txt
+RUN python -m pip install --upgrade -r /tmp/venv/requirements.txt
+
+# install gcc
+RUN apt update \
+    && apt -y install build-essential
+
+# install TA-Lib
+RUN cd ~ \
+    && wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
+    && tar -xzf ta-lib-0.4.0-src.tar.gz \
+    && rm ta-lib-0.4.0-src.tar.gz \
+    && cd ta-lib/ \
+    && ./configure --prefix=/usr \
+    && make \
+    && make install \
+    && cd ~ \
+    && rm -rf ta-lib/ \
+    && pip install ta-lib
+
+ADD .zipline /root/.zipline
+ADD backstreet/use_zipline /home/backstreet/use_zipline
+WORKDIR /home/backstreet/use_zipline
+
+CMD [ "jupyter", "notebook" , "--ip", "0.0.0.0", "--no-browser", "--allow-root"]
+
