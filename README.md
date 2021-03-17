@@ -20,6 +20,7 @@
 
 ### Ingest the custom bundle
 * Execute : ./scripts/ingest_bundle.sh
+* This will launch bash shell inside the running docker container - meaning user is inside the container and can make the changes
 * Prepare the daily or minutely ticker data csv in OHCLV format or fetch from AWS S3
 * Place it at /home/backstreet/use_zipline/prepare_custom_bundle/data/csvs
 * Change the bundle name in other details at: /home/backstreet/use_zipline/prepare_custom_bundle/extension.py
